@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>JournAI - Delete Entry</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .entry-preview {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+        }
+        .buttons {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .btn {
+            padding: 10px 20px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .btn:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Delete Journal Entry</h2>
+        
+        <div class="warning">
+            <strong>⚠️ Warning:</strong> This action cannot be undone. The entry will be permanently deleted.
+        </div>
+        
+        <div class="entry-preview">
+            <h4>Entry Preview:</h4>
+            <p><strong>Date:</strong> {{ entry.created_at|date:"F j, Y, g:i a" }}</p>
+            <p><strong>Content:</strong> {{ entry.content|truncatewords:30 }}</p>
+            {% if entry.sentiment %}
+                <p><strong>Primary Emotion:</strong> {{ entry.sentiment|title }} ({{ entry.score|floatformat:1 }}%)</p>
+            {% endif %}
+        </div>
+        
+        <form method="post" class="buttons">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Delete Entry</button>
+            <a href="{% url 'view_entry' entry.id %}" class="btn btn-secondary">Cancel</a>
+        </form>
+        
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="{% url 'journal_home' %}">← Back to Journal</a>
+        </div>
+    </div>
+</body>
+</html>
+

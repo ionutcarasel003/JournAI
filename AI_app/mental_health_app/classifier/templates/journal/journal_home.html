@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>JournAI - Journal Entries</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .nav-links {
+            margin-top: 15px;
+        }
+        .nav-links a {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-right: 10px;
+            background-color: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .nav-links a:hover {
+            background-color: #5a6fd8;
+        }
+        .nav-links a.new-entry {
+            background-color: #28a745;
+        }
+        .nav-links a.new-entry:hover {
+            background-color: #218838;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        th {
+            background-color: #667eea;
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        .action-links a {
+            margin-right: 10px;
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+        .action-links a.view {
+            color: #667eea;
+            background-color: #e3f2fd;
+        }
+        .action-links a.delete {
+            color: #dc3545;
+            background-color: #ffebee;
+        }
+        .action-links a:hover {
+            opacity: 0.8;
+        }
+        .no-entries {
+            text-align: center;
+            padding: 40px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>Your Journal Entries</h2>
+        <div class="nav-links">
+            <a href="{% url 'journal_create' %}" class="new-entry">New Entry</a>
+            <a href="{% url 'home' %}">Home</a>
+            <a href="{% url 'logout' %}">Logout</a>
+        </div>
+    </div>
+  
+  {% if entries %}
+    <table border="1" style="width: 100%; margin-top: 20px;">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Emotion</th>
+          <th>Confidence</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in entries %}
+          <tr>
+            <td>{{ entry.created_at|date:"F j, Y, g:i a" }}</td>
+            <td>
+              {% if entry.sentiment %}
+                <span style="color: #667eea; font-weight: bold;">{{ entry.sentiment|title }}</span>
+              {% else %}
+                <span style="color: #999;">Not analyzed</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if entry.score %}
+                <span style="color: #28a745; font-weight: bold;">{{ entry.score|floatformat:1 }}%</span>
+              {% else %}
+                <span style="color: #999;">-</span>
+              {% endif %}
+            </td>
+            <td class="action-links">
+              <a href="{% url 'view_entry' entry.id %}" class="view">View Entry</a>
+              <a href="{% url 'delete_entry' entry.id %}" class="delete">Delete</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="no-entries">
+      <p>No entries yet. <a href="{% url 'journal_create' %}">Create your first entry</a></p>
+    </div>
+  {% endif %}
+</body>
+</html>
