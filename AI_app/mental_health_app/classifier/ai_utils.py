@@ -1,10 +1,9 @@
 import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
-#blala
 
 model_path = r"D:\JournAI\AI_trainer\model"
 
-# Use AutoTokenizer and AutoModelForSequenceClassification to automatically detect the correct model type
+
 try:
     tokenizer = AutoTokenizer.from_pretrained(model_path)
     model = AutoModelForSequenceClassification.from_pretrained(model_path)

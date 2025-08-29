@@ -4,7 +4,7 @@ from transformers import TrainerCallback
 from pathlib import Path
 
 class PlotMetricsCallback(TrainerCallback):
-    def __init__(self, output_dir: str, smoothing_window: int = 10):
+    def __init__(self, output_dir: str, smoothing_window: int | None = None):
         super().__init__()
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -13,11 +13,11 @@ class PlotMetricsCallback(TrainerCallback):
         self.eval_accuracies = []
         self.train_steps = []
         self.eval_steps = []
-        self.smoothing_window = smoothing_window
+        self.smoothing_window = smoothing_window  # None or <=1 means no smoothing
 
     def _smooth_data(self, data, window_size):
         """Apply moving average smoothing to reduce noise"""
-        if len(data) < window_size:
+        if not window_size or window_size <= 1 or len(data) < window_size:
             return data
         smoothed = []
         for i in range(len(data)):
@@ -46,38 +46,32 @@ class PlotMetricsCallback(TrainerCallback):
         if len(self.train_steps) == 0:
             return
 
-        # Build plot with smoothed data
         plt.figure(figsize=(10, 6))
         ax = plt.gca()
-        
-        # Smooth the training data
-        if len(self.train_losses) > 1:
-            smooth_train_losses = self._smooth_data(self.train_losses, self.smoothing_window)
-            ax.plot(self.train_steps, smooth_train_losses, label="Training Loss (smoothed)", color="#2563eb", linewidth=2.5, alpha=0.8)
-            # Also show original data as thin line for comparison
-            ax.plot(self.train_steps, self.train_losses, color="#2563eb", linewidth=0.8, alpha=0.3, label="Training Loss (raw)")
 
+        use_smoothing = bool(self.smoothing_window and self.smoothing_window > 1)
+
+        # Training loss
+        y_train = self._smooth_data(self.train_losses, self.smoothing_window) if use_smoothing else self.train_losses
+        ax.plot(self.train_steps, y_train, label="Training Loss" + (" (smoothed)" if use_smoothing else ""), color="#2563eb", linewidth=2)
+
+        # Eval loss
         if len(self.eval_losses) > 0 and len(self.eval_steps) > 0:
-            smooth_eval_losses = self._smooth_data(self.eval_losses, self.smoothing_window)
-            ax.plot(self.eval_steps[:len(smooth_eval_losses)], smooth_eval_losses, label="Eval Loss (smoothed)", color="#ef4444", linewidth=2.5, alpha=0.8)
-            # Show original eval data as thin line
-            ax.plot(self.eval_steps[:len(self.eval_losses)], self.eval_losses, color="#ef4444", linewidth=0.8, alpha=0.3, label="Eval Loss (raw)")
+            y_eval = self._smooth_data(self.eval_losses, self.smoothing_window) if use_smoothing else self.eval_losses
+            ax.plot(self.eval_steps[:len(y_eval)], y_eval, label="Eval Loss" + (" (smoothed)" if use_smoothing else ""), color="#ef4444", linewidth=2)
 
         ax.set_xlabel("Steps", fontsize=12)
         ax.set_ylabel("Loss", fontsize=12)
         ax.grid(True, alpha=0.2)
         ax.set_title("Training Progress", fontsize=14, fontweight='bold')
 
-        # Secondary axis for accuracy
+        # Accuracy on secondary axis
         if len(self.eval_accuracies) > 0 and len(self.eval_steps) > 0:
             ax2 = ax.twinx()
-            smooth_accuracies = self._smooth_data(self.eval_accuracies, self.smoothing_window)
-            ax2.plot(self.eval_steps[:len(smooth_accuracies)], smooth_accuracies, label="Eval Accuracy (smoothed)", color="#10b981", linewidth=2.5, alpha=0.8)
-            # Show original accuracy as thin line
-            ax2.plot(self.eval_steps[:len(self.eval_accuracies)], self.eval_accuracies, color="#10b981", linewidth=0.8, alpha=0.3, label="Eval Accuracy (raw)")
+            y_acc = self._smooth_data(self.eval_accuracies, self.smoothing_window) if use_smoothing else self.eval_accuracies
+            ax2.plot(self.eval_steps[:len(y_acc)], y_acc, label="Eval Accuracy" + (" (smoothed)" if use_smoothing else ""), color="#10b981", linewidth=2)
             ax2.set_ylabel("Accuracy", fontsize=12)
 
-            # Build combined legend
             lines, labels = ax.get_legend_handles_labels()
             lines2, labels2 = ax2.get_legend_handles_labels()
             ax.legend(lines + lines2, labels + labels2, loc="upper right", fontsize=10)
